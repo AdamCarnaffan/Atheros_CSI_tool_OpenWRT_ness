@@ -5,6 +5,7 @@ from scipy.fftpack import fft
 from scipy.signal.signaltools import correlate
 import numpy as np
 
+BETA = 0.25
 
 ssh = SSHClient()
 ssh.load_system_host_keys()
@@ -15,7 +16,7 @@ print('started...')
 stdin, stdout, stderr = ssh.exec_command('/bin/recvCSI', get_pty=True)
 
 ready = False
-
+theta = None
 samples = []
 
 for line in iter(stdout.readline, ""):
@@ -44,12 +45,13 @@ for line in iter(stdout.readline, ""):
         wave2 = fft([theta[1] for theta in polarData[0][1]])
         wave1 = wave1[3:len(wave1)-2]
         wave2 = wave2[3:len(wave2)-2]
-        # plt.plot(wave1)
-        # plt.plot(wave2)
+        plt.plot(wave1)
+        plt.plot(wave2)
         xcor = np.argmax(correlate(wave1, wave2))
-        print(xcor)
-        plt.polar(0, 500)
-        plt.polar(xcor, np.mean([dat[0] for dat in polarData[0][0]]), marker='o')
+        theta = theta*(1-BETA) + xcor*BETA
+        print(theta)
+        # plt.polar(0, 500)
+        # plt.polar(theta, np.mean([dat[0] for dat in polarData[0][0]]), marker='o')
         # plt.plot([theta[1] for theta in polarData[1][0]])
         # plt.plot([theta[1] for theta in polarData[1][1]])
         plt.draw()
